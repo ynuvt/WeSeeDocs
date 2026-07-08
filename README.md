@@ -31,8 +31,9 @@ npm start
 When I first started this project, I realized that building a collaborative editor is quite challenging. If User A and User B open the same draft at the same time, make edits, and save, whoever clicks last will completely erase the other person's hard work. I knew I had to prevent this "lost update" bug!
 
 I chose a **lightweight, custom React and Express architecture** with a file-based **SQLite** database (`better-sqlite3`). I chose SQLite because it requires zero external installation, runs inside the backend process, and is incredibly fast.
+Also for the first time as I am working on such project,I tried out Zod for the first time., which is a schema validation library to manage bad requests.
 
-Instead of hiding the database queries behind a complex ORM (like Prisma or Hibernate) which I was still learning, I decided to write **clean, raw SQL queries**. This helped me understand exactly how parameters are bound and how SQLite lock transactions function!
+Instead of hiding the database queries behind a complex ORM (like Prisma or Hibernate), I decided to write **clean, raw SQL queries**. This helped me understand exactly how parameters are bound and how SQLite lock transactions function!
 
 ---
 
