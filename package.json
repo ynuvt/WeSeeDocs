@@ -1,0 +1,24 @@
+{
+  "name": "collaborative-draft-manager",
+  "version": "1.0.0",
+  "description": "Collaborative Draft Manager with React and Node.js",
+  "main": "server/server.js",
+  "scripts": {
+    "seed": "python generate_dataset.py",
+    "build": "cd client && npm install && npm run build",
+    "start": "npm run build && node server/server.js",
+    "dev:server": "nodemon server/server.js",
+    "dev:client": "cd client && npm run dev",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\""
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.1.2",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.1.4"
+  }
+}
