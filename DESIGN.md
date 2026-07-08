@@ -1,4 +1,4 @@
-# WeSee Docs 🚀
+# WeSee Docs 
 
 Hello there! Welcome to **WeSee Docs** — a collaborative document drafting application I built with lots of excitement and late-night coding sessions. I wanted to build something extremely simple, fast, and robust that solves one of the most exciting challenges in software development: **concurrency (preventing users from accidentally overwriting each other's changes)**!
 
@@ -82,4 +82,4 @@ If I had another weekend to work on this, I would add:
 
 ---
 
-Thank you for checking out my build! I learned so much about database transactions, React state rollbacks, and concurrent sync issues. I'm super proud of how simple and robust the concurrency flow turned out! 🚀
+Thank you for checking out my build! I learned so much about database transactions, React state rollbacks, and concurrent sync issues. I'm super proud of how simple and robust the concurrency flow turned out! 
