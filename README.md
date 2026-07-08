@@ -1,4 +1,4 @@
-# WeSee Docs 🚀
+# WeSee Docs 
 
 Hello there! Welcome to **WeSee Docs** — a collaborative document drafting application I built with lots of excitement and late-night coding sessions. I wanted to build something extremely simple, fast, and robust that solves one of the most exciting challenges in software development: **concurrency (preventing users from accidentally overwriting each other's changes)**!
 
