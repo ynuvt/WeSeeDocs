@@ -27,9 +27,9 @@ export default function DraftListItem({ draft, isSelected, onClick }) {
 
   const getTypeLabel = (type) => {
     switch (type) {
-      case 'social': return '📱 Social';
-      case 'article': return '📄 Article';
-      case 'caption': return '💬 Caption';
+      case 'social': return 'Social';
+      case 'article': return 'Article';
+      case 'caption': return 'Caption';
       default: return type;
     }
   };

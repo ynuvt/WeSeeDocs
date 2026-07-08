@@ -25,9 +25,6 @@ export default function ConflictBanner({
 
   return (
     <div className={`conflict-banner ${isConflict ? 'banner-conflict' : 'banner-polling'}`}>
-      <div className="banner-icon">
-        {isConflict ? '⚠️' : '🔔'}
-      </div>
       <div className="banner-content">
         <h5 className="banner-title">
           {isConflict ? 'Save Blocked: Concurrency Conflict' : 'Newer Version Available on Server'}

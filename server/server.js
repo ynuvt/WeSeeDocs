@@ -5,7 +5,7 @@ const db = require('./db'); // Boot database & seed if necessary
 const draftsRouter = require('./routes/drafts');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());

@@ -17,7 +17,6 @@ export default function DraftList({
       <div className="draft-list-scroller">
         {drafts.length === 0 && !isLoading ? (
           <div className="no-results">
-            <span className="no-results-icon">🔍</span>
             <p>No drafts match your criteria.</p>
           </div>
         ) : (

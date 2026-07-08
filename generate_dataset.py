@@ -35,9 +35,9 @@ def generate_drafts(count=1200):
             "Zod vs Hand-written Validations: Performance and Type-Safety"
         ],
         'caption': [
-            "Coffee, code, and collaboration. ☕💻", "Behind the scenes of our latest release.",
+            "Coffee, code, and collaboration.", "Behind the scenes of our latest release.",
             "Work hard, dream big, edit concurrently.", "Less is more. Simplicity in design.",
-            "Building the future of draft management.", "Teamwork makes the dream work! ✨",
+            "Building the future of draft management.", "Teamwork makes the dream work!",
             "Monday motivation: debug and deploy.", "Simplicity is the ultimate sophistication."
         ]
     }

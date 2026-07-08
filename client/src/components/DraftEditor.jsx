@@ -30,7 +30,6 @@ export default function DraftEditor({
   if (!draft) {
     return (
       <div className="editor-placeholder">
-        <span className="placeholder-icon">📝</span>
         <h3>No Draft Selected</h3>
         <p>Select a draft from the sidebar list to start editing, or create a new draft.</p>
       </div>
@@ -157,9 +156,9 @@ export default function DraftEditor({
               onChange={(e) => handleFieldChange('type', e.target.value)}
               className={validationErrors.type ? 'input-error' : ''}
             >
-              <option value="social">📱 Social Media</option>
-              <option value="article">📄 Article</option>
-              <option value="caption">💬 Caption</option>
+              <option value="social">Social Media</option>
+              <option value="article">Article</option>
+              <option value="caption">Caption</option>
             </select>
             {validationErrors.type && <span className="field-error">{validationErrors.type}</span>}
           </div>

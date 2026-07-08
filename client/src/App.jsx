@@ -83,7 +83,6 @@ export default function App() {
     <div className="app-container">
       <header className="app-header">
         <div className="logo-section">
-          <span className="logo-emoji">📝</span>
           <h1>Collaborative Draft Manager</h1>
         </div>
         <button 
