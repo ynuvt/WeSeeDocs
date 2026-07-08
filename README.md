@@ -82,4 +82,4 @@ If I had another weekend to work on this, I would add:
 
 ---
 
-Thank you for checking out my build! I learned so much about database transactions, React state rollbacks, and concurrent sync issues. I'm super proud of how simple and robust the concurrency flow turned out! 
+Thank you for checking out my build! I learned so much about database transactions, React state rollbacks, and concurrent sync issues.I'm super proud of how simple and robust the concurrency flow turned out! 

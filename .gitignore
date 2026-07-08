@@ -1,5 +1,15 @@
-node_modules
-drafts.db-wal
-drafts.db-shm
-drafts.db
+# Dependency folders
+node_modules/
+client/node_modules/
 
+# Local databases and WAL files
+data/drafts.db
+data/drafts.db-shm
+data/drafts.db-wal
+
+# Environment variables
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
