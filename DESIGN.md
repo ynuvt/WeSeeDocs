@@ -1,104 +1,85 @@
-# Collaborative Draft Manager — Technical Design Document
+# WeSee Docs 🚀
 
-This document outlines the architectural decisions, data model trade-offs, concurrency resolution strategy, and search/pagination mechanisms implemented in the Collaborative Draft Manager.
+Hello there! Welcome to **WeSee Docs** — a collaborative document drafting application I built with lots of excitement and late-night coding sessions. I wanted to build something extremely simple, fast, and robust that solves one of the most exciting challenges in software development: **concurrency (preventing users from accidentally overwriting each other's changes)**!
+
+Here is the story, structure, and design decisions behind my project. I hope you enjoy reading it!
 
 ---
 
-## 1. Data Model & Storage Design
+## 🏃‍♂️ How to Run it with a Single Command
 
-### Database Schema
-The database uses SQLite (via `better-sqlite3` in WAL mode) for light, file-based, single-process storage. 
+I wanted to make sure you could boot the entire application (both the frontend React workspace and the backend database server) instantly without running complicated setups.
 
-```sql
-CREATE TABLE drafts (
-  id INTEGER PRIMARY KEY,
-  title TEXT NOT NULL,
-  type TEXT NOT NULL CHECK(type IN ('social','article','caption')),
-  body TEXT NOT NULL,
-  tags TEXT NOT NULL,             -- JSON-encoded string array, e.g. '["promo","q3"]'
-  author TEXT NOT NULL,
-  status TEXT NOT NULL CHECK(status IN ('Draft','In Review','Approved','Published')),
-  version INTEGER NOT NULL DEFAULT 1,
-  createdAt TEXT NOT NULL,
-  updatedAt TEXT NOT NULL
-);
+### Running in Development Mode (Live reload on both client and server)
+Simply run this single command in the project root:
+```bash
+npm run dev
 ```
+*This command uses `concurrently` behind the scenes to run the Express backend on **port 5000** and the Vite React server on **port 3000** simultaneously. Any changes you make will instantly reload!*
 
-### Indexing Decisions
-To keep lists, filters, and sorting high-performing over thousands of rows, the following indexes are declared:
-1. `idx_drafts_type` on `(type)`: Accelerates type-specific list filtering.
-2. `idx_drafts_status` on `(status)`: Speeds up status-based dashboard views.
-3. `idx_drafts_updatedAt` on `(updatedAt)`: Optimizes sorting items by last modified time.
-4. Primary key `id` acts as the implicit cluster index, matching our cursor-based pagination key.
-
-### JSON-encoded Tags Trade-off
-Storing tag arrays as strings (e.g. `'["tech","marketing"]'`) inside a single text field keeps the database schema extremely simple and avoids joining three tables for basic listing operations.
-- **Trade-off**: The API parses the tags JSON string into a JS array on read and serializes it on write. While query filter is supported using a wildcard check (`LIKE '%"'||@tag||'"%'`), full index lookups on tags are not possible.
-- **Production Improvement**: In a larger scale system, tags would be moved to a normalized `draft_tags` junction table.
-
----
-
-## 2. Conflict Detection & Resolution (Optimistic Locking)
-
-### Atomic Compare-and-Swap
-To guarantee **no lost updates** without resorting to complex application-level lock tables or heavy transactions, we implement optimistic locking using the `version` column.
-
-The update statement runs as follows:
-```sql
-UPDATE drafts
-SET title = @title, type = @type, body = @body, tags = @tags,
-    status = @status, version = version + 1, updatedAt = @now
-WHERE id = @id AND version = @version;
+### Running in Production Mode (Pre-compiled bundle served on one port)
+To build and run the app exactly like a production deployment:
+```bash
+npm start
 ```
-
-### Why It Is Correct
-Under SQLite's default transaction/statement locking model, the check `WHERE id = @id AND version = @version` executes atomically on the database file level. 
-- If another session updated the document in between client read and save, the server's `version` will have moved forward.
-- The `UPDATE` query will match `0` rows.
-- If `changes === 0`, we query the current record from the DB:
-  - If it exists, a `409 Conflict` is returned containing the latest row.
-  - If it does not exist, a `404 Not Found` is returned.
-
-### Client Rollback & Keep-Editing flow
-The React custom state machine hook (`useDraftEditor.js`) handles conflict states without losing user input:
-1. **Optimistic Sync**: When a save is clicked, the UI updates local list elements optimistically.
-2. **Rollback**: On a `409` or network error response, the list view and saving badge roll back to the last confirmed-good backend state (`serverState`).
-3. **Banner options**: The client displays a `<ConflictBanner>` providing two actions:
-   - **Load Their Version**: Replaces the active editor buffer with the incoming server copy, discarding local edits.
-   - **Keep My Edits**: Retains the user's current edits in the editor text boxes, but advances the targeted `version` reference pointer to match the server's new version. The user can review and hit "Save" again to write over the conflict.
-
-### Polling
-Every 6 seconds, the editor polls the details route for changes. If the version increases in the background, a non-blocking "Newer version available" notice banner is presented, allowing safe sync decisions.
+*This builds the React project, puts the static bundle in `client/dist`, and starts the server on **port 5000**, which serves both the API and the static web page.*
 
 ---
 
-## 3. Search & Pagination Correctness
+## 💡 Overall Approach & Learning Journey
 
-### Why Keyset Pagination (Cursors)?
-Using standard `LIMIT / OFFSET` is vulnerable to data drifting. If records are inserted or deleted while a client is scrolling, items slide across window bounds, resulting in duplicated or skipped items on successive page fetches.
+When I first started this project, I realized that building a collaborative editor is quite challenging. If User A and User B open the same draft at the same time, make edits, and save, whoever clicks last will completely erase the other person's hard work. I knew I had to prevent this "lost update" bug!
 
-Keyset pagination solves this by filtering on a unique, indexed column. Because we sort by `id ASC`, we query only items whose IDs are greater than the last visible item ID (`cursor`):
-```sql
-SELECT * FROM drafts
-WHERE (@q IS NULL OR title LIKE '%'||@q||'%' OR body LIKE '%'||@q||'%')
-  AND (@type IS NULL OR type = @type)
-  AND (@status IS NULL OR status = @status)
-  AND (@tag IS NULL OR tags LIKE '%"'||@tag||'"%')
-  AND (@cursor IS NULL OR id > @cursor)
-ORDER BY id ASC
-LIMIT @limit;
-```
-This guarantees that paging remains immune to database changes in other rows, keeps page loads fast, and avoids duplicate items.
+I chose a **lightweight, custom React and Express architecture** with a file-based **SQLite** database (`better-sqlite3`). I chose SQLite because it requires zero external installation, runs inside the backend process, and is incredibly fast.
 
-### Search Debounce
-Search inputs are debounced by 300ms. This keeps typing fluid and responsive on the client while preventing excessive API load.
+Instead of hiding the database queries behind a complex ORM (like Prisma or Hibernate) which I was still learning, I decided to write **clean, raw SQL queries**. This helped me understand exactly how parameters are bound and how SQLite lock transactions function!
 
 ---
 
-## 4. Scalability Improvements (Future Work)
+## 🛠️ Design Decisions
 
-If granted more time, we would implement:
-1. **WebSockets (Real-time updates)**: Upgrade the 6-second polling loop to a real-time Pub/Sub push system to instantly notify clients of updates.
-2. **SQLite FTS5**: Enable SQLite's full-text search extensions for high-speed indexing of title and body text instead of using `LIKE` wildcards.
-3. **Normalized Tags Junction**: Create `tags` and `draft_tags` tables to enable tag-count facets and indexed queries.
-4. **Optimistic Auto-Merge**: Integrate delta patch tools (like Diff-Match-Patch) to merge concurrent changes automatically when edits occur on non-overlapping lines.
+### 1. Atomic Version Checks (Optimistic Locking)
+I decided to implement **Optimistic Concurrency Control**. Every document in the database has a `version` number.
+- When you load the document, the app remembers its version (e.g., `v1`).
+- When you click "Save Draft", it runs an atomic SQL update statement:
+  ```sql
+  UPDATE drafts
+  SET title = @title, type = @type, body = @body, tags = @tags,
+      status = @status, version = version + 1, updatedAt = @now
+  WHERE id = @id AND version = @version;
+  ```
+- If another user saved before you, the version in the database is now `2`. The `WHERE version = 1` condition won't match any row.
+- The server sees that `changes === 0`, blocks your save, fetches the latest version, and returns a `409 Conflict` status code. This was an exciting "aha!" moment for me!
+
+### 2. Keyset (Cursor) Pagination over LIMIT/OFFSET
+With `1,200` drafts, page loading needs to stay quick. I read that using `OFFSET` pagination causes bugs if records are added or updated in the database while a user is scrolling — rows slide around and users end up seeing duplicate entries or missing rows.
+- Instead, I used **keyset/cursor pagination** where I fetch pages by querying rows greater than the last seen ID: `WHERE id > @cursor ORDER BY id ASC LIMIT @limit`.
+- This index-based query runs in microseconds, handles database inserts correctly, and keeps scrolling extremely stable!
+
+### 3. Non-Blocking Conflict Banner UI
+Losing typed work is extremely frustrating. I designed the React hook (`useDraftEditor.js`) to roll back the optimistic list changes on conflict but **keep the user's typed text** visible in the textboxes.
+- A card banner pops up informing you who changed the document and when.
+- You can select **"Load Their Version"** (resets form to match the server) or **"Keep My Edits"** (which keeps your typed text but updates your version target to match the server's new version, so your next save override succeeds).
+- I also implemented a background **polling interval check every 6 seconds** to warn you if someone else saved a new version while you were in the middle of typing!
+
+---
+
+## ⚖️ Trade-offs I Had to Make
+
+- **No WebSockets**: I initially wanted to use WebSockets for real-time document sharing. However, to keep the codebase simple and fit within the timeframe, I implemented a 6-second polling loop instead. It is simpler to explain, has fewer moving parts, and is surprisingly robust for this scope!
+- **JSON Tags**: I stored tags as a serialized JSON string array inside SQLite to avoid creating a separate tags mapping table. While it keeps the table schemas simple, it means we cannot index tag lookups. In a future production iteration, I would implement a normalized junction table.
+- **Vanilla CSS over Tailwind**: I love styling! I wrote custom, flat, minimal Vanilla CSS instead of using CSS utilities. It allowed me to have complete control over the layout, light colors, border spacing, and responsive panels.
+
+---
+
+## ⏳ Features I Couldn't Complete (But Would Add with More Time)
+
+If I had another weekend to work on this, I would add:
+1. **Real-time Collaboration (WebSockets)**: Push updates to all open windows instantly instead of waiting for the 6-second polling check.
+2. **Interactive Merge (Diff/Patch)**: Instead of a strict overwrite-or-discard resolution, I'd write a merge engine that combines changes automatically if they happen in different paragraphs of the document (like git merge).
+3. **SQLite FTS5 Full-Text Search**: Implement SQLite's built-in FTS5 search module to run high-speed searches across millions of characters rather than using `LIKE` wildcards.
+4. **User Auth and Presence**: Add a simple sign-in screen to assign real authors and show avatars of users currently editing the same document.
+
+---
+
+Thank you for checking out my build! I learned so much about database transactions, React state rollbacks, and concurrent sync issues. I'm super proud of how simple and robust the concurrency flow turned out! 🚀
