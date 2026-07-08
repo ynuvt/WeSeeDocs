@@ -83,7 +83,7 @@ export default function App() {
     <div className="app-container">
       <header className="app-header">
         <div className="logo-section">
-          <h1>Collaborative Draft Manager</h1>
+          <h1>WeSee Docs</h1>
         </div>
         <button 
           onClick={triggerCreateNew} 
